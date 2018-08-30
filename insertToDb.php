@@ -10,10 +10,10 @@
 	}
 
 	// Define function to check that inputted expense number has a maximum of 2 decimal places
-	function validateTwoDecimals($number)
-	{
-	   return (preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $number));
-	}
+	//function validateTwoDecimals($number)
+	//{
+	//   return (preg_match('/^[0-9]+(\.[0-9]{1,2})?$/', $number));
+	//}
  
 	// PHP script used to connect to backend Azure SQL database
 	require 'ConnectToDatabase.php';
@@ -21,27 +21,26 @@
 	// Start session for this particular PHP script execution.
 	session_start();
 
-	// Define ariables and set to empty values
-	$expenseDay = $expenseMonth = $expenseYear = $expenseAmount = $expenseNote = $expenseCategory = $errorMessage = NULL;
+	// Define variables and set to empty values
+	$startDate= $vehicleMake = $endDate = $vehicleModel = $employeeName = $errorMessage = NULL;
 
 	// Get input variables
-	$expenseDay= (int) parse_input($_POST['expense_day']);
-	$expenseMonth= (int) parse_input($_POST['expense_month']);
-	$expenseYear= (int) parse_input($_POST['expense_year']);
-	$expenseAmount= (float) parse_input($_POST['expense_amount']);
-	$expenseNote= parse_input($_POST['input_note']);
-	$expenseCategory= parse_input($_POST['expense_category']);
+	$startDate= parse_input($_POST['start_date']);
+	$endDate = parse_input($_POST['end_date']);
+	$vehicleMake= parse_input($_POST['vehicle_make']);
+	$vehicleModel = parse_input($_POST['vehicle_model']);
+	$employeeName= parse_input($_POST['employee_name']);
 
 	// Get the authentication claims stored in the Token Store after user logins using Azure Active Directory
-	$claims= json_decode($_SERVER['MS_CLIENT_PRINCIPAL'])->claims;
-	foreach($claims as $claim)
-	{		
-		if ( $claim->typ == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" )
-		{
-			$userEmail= $claim->val;
-			break;
-		}
-	}
+	//$claims= json_decode($_SERVER['MS_CLIENT_PRINCIPAL'])->claims;
+	//foreach($claims as $claim)
+	//{		
+	//	if ( $claim->typ == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" )
+	//	{
+	//		$userEmail= $claim->val;
+	//		break;
+	//	}
+	//}
 
 	///////////////////////////////////////////////////////
 	//////////////////// INPUT VALIDATION /////////////////
@@ -51,15 +50,15 @@
 	$anyErrors= FALSE;
 
 	// Check category validity
-	if ($expenseCategory == '-1') {$errorMessage= "Error: Invalid Category Selected"; $anyErrors= TRUE;}
+	//if ($expenseCategory == '-1') {$errorMessage= "Error: Invalid Category Selected"; $anyErrors= TRUE;}
 	
 	// Check date validity
-	$isValidDate= checkdate($expenseMonth, $expenseDay, $expenseYear);
-	if (!$isValidDate) {$errorMessage= "Error: Invalid Date"; $anyErrors= TRUE;}
+	//$isValidDate= checkdate($expenseMonth, $expenseDay, $expenseYear);
+	//if (!$isValidDate) {$errorMessage= "Error: Invalid Date"; $anyErrors= TRUE;}
 
 	// Check that the expense amount input has maximum of 2 decimal places (check against string input, not the float parsed input)
-	$isValidExpenseAmount= validateTwoDecimals(parse_input($_POST['expense_amount']));
-	if (!$isValidExpenseAmount) {$errorMessage= "Error: Invalid Expense Amount"; $anyErrors= TRUE;}
+	//$isValidExpenseAmount= validateTwoDecimals(parse_input($_POST['expense_amount']));
+	//if (!$isValidExpenseAmount) {$errorMessage= "Error: Invalid Expense Amount"; $anyErrors= TRUE;}
 
 
 	///////////////////////////////////////////////////////
@@ -70,15 +69,15 @@
 	if ( !$anyErrors ) 
 	{
 		// Create a DateTime object based on inputted data
-		$dateObj= DateTime::createFromFormat('Y-m-d', $expenseYear . "-" . $expenseMonth . "-" . $expenseDay);
+		//$dateObj= DateTime::createFromFormat('Y-m-d', $expenseYear . "-" . $expenseMonth . "-" . $expenseDay);
 
 		// Get the name of the month (e.g. January) of this expense
-		$expenseMonthName= $dateObj->format('F');
+		//$expenseMonthName= $dateObj->format('F');
 
 		// Get the day of the week (e.g. Tuesday) of this expense
-		$expenseDayOfWeekNum= $dateObj->format('w');
-		$days = array('Sunday', 'Monday', 'Tuesday', 'Wednesday','Thursday','Friday', 'Saturday');
-		$expenseDayOfWeek = $days[$expenseDayOfWeekNum];
+		//$expenseDayOfWeekNum= $dateObj->format('w');
+		//$days = array('Sunday', 'Monday', 'Tuesday', 'Wednesday','Thursday','Friday', 'Saturday');
+		//$expenseDayOfWeek = $days[$expenseDayOfWeekNum];
 
 		// Connect to Azure SQL Database
 		$conn = ConnectToDabase();
@@ -86,24 +85,17 @@
 		// Build SQL query to insert new expense data into SQL database
 		$tsql=
 		"INSERT INTO Expenses (	
-				UserName,
-				ExpenseDay,
-				ExpenseDayOfWeek,
-				ExpenseMonth,
-				ExpenseMonthName,
-				ExpenseYear,
-				ExpenseCategory,
-				ExpenseAmount,
-				Notes)
-		VALUES ('" . $userEmail . "',
-				'" . $expenseDay . "', 
-				'" . $expenseDayOfWeek . "', 
-				'" . $expenseMonth . "', 
-				'" . $expenseMonthName . "', 
-				'" . $expenseYear . "', 
-				'" . $expenseCategory . "', 
-				'" . $expenseAmount . "', 
-				'" . $expenseNote . "')";
+				employee_name,
+				start_date,
+				end_date,
+				vehicle_make,
+				vehicle_model
+				)
+		VALUES ('" . $employeeName . "',
+				'" . $startDate . "', 
+				'" . $endDate . "', 
+				'" . $vehicleMake . "', 
+				'" . $vehicleModel . "')";
 
 		// Run query
 		$sqlQueryStatus= sqlsrv_query($conn, $tsql);
@@ -117,12 +109,11 @@
 
 	// Populate array with key-value pairs
 	$prevSelections['errorMessage']= $errorMessage;
-	$prevSelections['prevExpenseDay']= $expenseDay;
-	$prevSelections['prevExpenseMonth']= $expenseMonth;
-	$prevSelections['prevExpenseYear']= $expenseYear;
-	$prevSelections['prevExpenseCategory']= $expenseCategory;
-	$prevSelections['prevExpenseAmount']= $expenseAmount;
-	$prevSelections['prevExpenseNote']= $expenseNote;
+	$prevSelections['prevemployeeName']= $employeeName;
+	$prevSelections['prevstartDate']= $startDate;
+	$prevSelections['prevendDate']= $endDate;
+	$prevSelections['prevvehicaleMake']= $vehicleMake;
+	$prevSelections['prevvehicleModel']= $vehicleModel;
 
 	// Store previously-selected data as part of info to carry over after URL redirection
 	$_SESSION['prevSelections'] = $prevSelections;
