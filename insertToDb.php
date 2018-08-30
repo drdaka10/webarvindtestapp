@@ -84,7 +84,7 @@
 
 		// Build SQL query to insert new expense data into SQL database
 		$tsql=
-		"INSERT INTO Expenses (	
+		"INSERT INTO Parking (	
 				employee_name,
 				start_date,
 				end_date,
@@ -112,7 +112,7 @@
 	$prevSelections['prevemployeeName']= $employeeName;
 	$prevSelections['prevstartDate']= $startDate;
 	$prevSelections['prevendDate']= $endDate;
-	$prevSelections['prevvehicaleMake']= $vehicleMake;
+	$prevSelections['prevvehicleMake']= $vehicleMake;
 	$prevSelections['prevvehicleModel']= $vehicleModel;
 
 	// Store previously-selected data as part of info to carry over after URL redirection
